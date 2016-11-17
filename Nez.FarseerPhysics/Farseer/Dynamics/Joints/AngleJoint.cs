@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 
+
 namespace FarseerPhysics.Dynamics.Joints
 {
 	/// <summary>
@@ -34,7 +35,7 @@ namespace FarseerPhysics.Dynamics.Joints
 				if( value != _targetAngle )
 				{
 					_targetAngle = value;
-					WakeBodies();
+					wakeBodies();
 				}
 			}
 		}
@@ -43,13 +44,13 @@ namespace FarseerPhysics.Dynamics.Joints
 		/// Gets or sets the bias factor.
 		/// Defaults to 0.2
 		/// </summary>
-		public float biasFactor;
+		public float biasFactor = 0.2f;
 
 		/// <summary>
 		/// Gets or sets the maximum impulse
 		/// Defaults to float.MaxValue
 		/// </summary>
-		public float maxImpulse;
+		public float maxImpulse = float.MaxValue;
 
 		/// <summary>
 		/// Gets or sets the softness of the joint
@@ -78,23 +79,21 @@ namespace FarseerPhysics.Dynamics.Joints
 		public AngleJoint( Body bodyA, Body bodyB ) : base( bodyA, bodyB )
 		{
 			jointType = JointType.Angle;
-			biasFactor = .2f;
-			maxImpulse = float.MaxValue;
 		}
 
-		public override Vector2 GetReactionForce( float invDt )
+		public override Vector2 getReactionForce( float invDt )
 		{
 			//TODO
 			//return _inv_dt * _impulse;
 			return Vector2.Zero;
 		}
 
-		public override float GetReactionTorque( float invDt )
+		public override float getReactionTorque( float invDt )
 		{
 			return 0;
 		}
 
-		internal override void InitVelocityConstraints( ref SolverData data )
+		internal override void initVelocityConstraints( ref SolverData data )
 		{
 			int indexA = bodyA.islandIndex;
 			int indexB = bodyB.islandIndex;
@@ -105,22 +104,25 @@ namespace FarseerPhysics.Dynamics.Joints
 			_jointError = ( bW - aW - targetAngle );
 			_bias = -biasFactor * data.step.inv_dt * _jointError;
 			_massFactor = ( 1 - softness ) / ( bodyA._invI + bodyB._invI );
+
+			if( float.IsInfinity( _massFactor ) )
+				_massFactor = float.MaxValue;
 		}
 
-		internal override void SolveVelocityConstraints( ref SolverData data )
+		internal override void solveVelocityConstraints( ref SolverData data )
 		{
 			int indexA = bodyA.islandIndex;
 			int indexB = bodyB.islandIndex;
 
-			float p = ( _bias - data.velocities[indexB].w + data.velocities[indexA].w ) * _massFactor;
+			var p = ( _bias - data.velocities[indexB].w + data.velocities[indexA].w ) * _massFactor;
 
 			data.velocities[indexA].w -= bodyA._invI * Math.Sign( p ) * Math.Min( Math.Abs( p ), maxImpulse );
 			data.velocities[indexB].w += bodyB._invI * Math.Sign( p ) * Math.Min( Math.Abs( p ), maxImpulse );
 		}
 
-		internal override bool SolvePositionConstraints( ref SolverData data )
+		internal override bool solvePositionConstraints( ref SolverData data )
 		{
-			//no position solving for this joint
+			// no position solving for this joint
 			return true;
 		}
 	

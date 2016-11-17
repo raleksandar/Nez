@@ -5,6 +5,7 @@ using FarseerPhysics.Common;
 using FarseerPhysics.Dynamics;
 using Microsoft.Xna.Framework;
 
+
 namespace FarseerPhysics.Factories
 {
 	public static class LinkFactory
@@ -29,14 +30,14 @@ namespace FarseerPhysics.Factories
 
 			// Chain start / end
 			var path = new Path();
-			path.Add( start );
-			path.Add( end );
+			path.add( start );
+			path.add( end );
 
 			// A single chainlink
-			var shape = new PolygonShape( PolygonTools.CreateRectangle( linkWidth, linkHeight ), linkDensity );
+			var shape = new PolygonShape( PolygonTools.createRectangle( linkWidth, linkHeight ), linkDensity );
 
 			// Use PathManager to create all the chainlinks based on the chainlink created before.
-			var chainLinks = PathManager.EvenlyDistributeShapesAlongPath( world, path, shape, BodyType.Dynamic, numberOfLinks );
+			var chainLinks = PathManager.evenlyDistributeShapesAlongPath( world, path, shape, BodyType.Dynamic, numberOfLinks );
 
 			if( fixStart )
 			{
@@ -54,7 +55,7 @@ namespace FarseerPhysics.Factories
 			}
 
 			// Attach all the chainlinks together with a revolute joint
-			PathManager.AttachBodiesWithRevoluteJoint( world, chainLinks, new Vector2( 0, -linkHeight ), new Vector2( 0, linkHeight ), false, false );
+			PathManager.attachBodiesWithRevoluteJoint( world, chainLinks, new Vector2( 0, -linkHeight ), new Vector2( 0, linkHeight ), false, false );
 
 			if( attachRopeJoint )
 				JointFactory.CreateRopeJoint( world, chainLinks[0], chainLinks[chainLinks.Count - 1], Vector2.Zero, Vector2.Zero );

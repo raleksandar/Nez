@@ -63,16 +63,16 @@ namespace FarseerPhysics.Controllers
 			set
 			{
 				_container = value;
-				_offset = _container.UpperBound.Y;
+				_offset = _container.upperBound.Y;
 			}
 		}
 
 		public override void Update( float dt )
 		{
 			_uniqueBodies.Clear();
-			World.QueryAABB( fixture =>
+			World.queryAABB( fixture =>
 								 {
-									 if( fixture.body.isStatic || !fixture.body.awake )
+									 if( fixture.body.isStatic || !fixture.body.isAwake )
 										 return true;
 
 									 if( !_uniqueBodies.ContainsKey( fixture.body.bodyId ) )
@@ -100,7 +100,7 @@ namespace FarseerPhysics.Controllers
 					Shape shape = fixture.shape;
 
 					Vector2 sc;
-					float sarea = shape.ComputeSubmergedArea( ref _normal, _offset, ref body._xf, out sc );
+					float sarea = shape.computeSubmergedArea( ref _normal, _offset, ref body._xf, out sc );
 					area += sarea;
 					areac.X += sarea * sc.X;
 					areac.Y += sarea * sc.Y;
@@ -115,20 +115,20 @@ namespace FarseerPhysics.Controllers
 				massc.X /= mass;
 				massc.Y /= mass;
 
-				if( area < Settings.Epsilon )
+				if( area < Settings.epsilon )
 					continue;
 
 				//Buoyancy
 				var buoyancyForce = -Density * area * _gravity;
-				body.ApplyForce( buoyancyForce, massc );
+				body.applyForce( buoyancyForce, massc );
 
 				//Linear drag
-				var dragForce = body.GetLinearVelocityFromWorldPoint( areac ) - Velocity;
+				var dragForce = body.getLinearVelocityFromWorldPoint( areac ) - Velocity;
 				dragForce *= -LinearDragCoefficient * area;
-				body.ApplyForce( dragForce, areac );
+				body.applyForce( dragForce, areac );
 
 				//Angular drag
-				body.ApplyTorque( -body.inertia / body.mass * area * body.angularVelocity * AngularDragCoefficient );
+				body.applyTorque( -body.inertia / body.mass * area * body.angularVelocity * AngularDragCoefficient );
 			}
 		}
 	}

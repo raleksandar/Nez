@@ -52,7 +52,7 @@ namespace Nez.Farseer
 		public static Fixture attachPolygon( this Body body, List<Vector2> vertices, float density )
 		{
 			for( var i = 0; i < vertices.Count; i++ )
-				vertices[i] = FSConvert.displayToSim * ( vertices[i] );
+				vertices[i] = FSConvert.displayToSim * vertices[i];
 
 			return FixtureFactory.AttachPolygon( new Vertices( vertices ), density, body );
 		}
@@ -92,13 +92,13 @@ namespace Nez.Farseer
 
 		public static List<Fixture> attachGear( this Body body, float radius, int numberOfTeeth, float tipPercentage, float toothHeight, float density )
 		{
-			var gearPolygon = PolygonTools.CreateGear( FSConvert.displayToSim * radius, numberOfTeeth, tipPercentage, FSConvert.displayToSim * toothHeight );
+			var gearPolygon = PolygonTools.createGear( FSConvert.displayToSim * radius, numberOfTeeth, tipPercentage, FSConvert.displayToSim * toothHeight );
 
 			// Gears can in some cases be convex
-			if( !gearPolygon.IsConvex() )
+			if( !gearPolygon.isConvex() )
 			{
 				//Decompose the gear:
-				var list = Triangulate.ConvexPartition( gearPolygon, TriangulationAlgorithm.Earclip );
+				var list = Triangulate.convexPartition( gearPolygon, TriangulationAlgorithm.Earclip );
 				return body.attachCompoundPolygon( list, density );
 			}
 

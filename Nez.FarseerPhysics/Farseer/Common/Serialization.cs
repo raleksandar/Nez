@@ -23,7 +23,7 @@ namespace FarseerPhysics.Common
 		/// </summary>
 		/// <param name="world"></param>
 		/// <param name="fileStream"></param>
-		public static void Serialize( World world, Stream fileStream )
+		public static void serialize( World world, Stream fileStream )
 		{
 			WorldXmlSerializer.Serialize( world, fileStream );
 		}
@@ -32,11 +32,13 @@ namespace FarseerPhysics.Common
 		/// Deserialize the world from an XML file
 		/// </summary>
 		/// <param name="fileStream"></param>
-		public static World Deserialize( Stream fileStream )
+		public static World deserialize( Stream fileStream )
 		{
 			return WorldXmlDeserializer.Deserialize( fileStream );
 		}
+	
 	}
+
 
 	internal static class WorldXmlSerializer
 	{
@@ -127,12 +129,12 @@ namespace FarseerPhysics.Common
 			_writer.WriteStartElement( "Body" );
 			_writer.WriteAttributeString( "Type", body.bodyType.ToString() );
 			_writer.WriteElementString( "Active", body.enabled.ToString() );
-			_writer.WriteElementString( "AllowSleep", body.sleepingAllowed.ToString() );
+			_writer.WriteElementString( "AllowSleep", body.isSleepingAllowed.ToString() );
 			_writer.WriteElementString( "Angle", body.rotation.ToString() );
 			_writer.WriteElementString( "AngularDamping", body.angularDamping.ToString() );
 			_writer.WriteElementString( "AngularVelocity", body.angularVelocity.ToString() );
-			_writer.WriteElementString( "Awake", body.awake.ToString() );
-			_writer.WriteElementString( "Bullet", body.IsBullet.ToString() );
+			_writer.WriteElementString( "Awake", body.isAwake.ToString() );
+			_writer.WriteElementString( "Bullet", body.isBullet.ToString() );
 			_writer.WriteElementString( "FixedRotation", body.fixedRotation.ToString() );
 			_writer.WriteElementString( "LinearDamping", body.linearDamping.ToString() );
 			WriteElement( "LinearVelocity", body.linearVelocity );
@@ -346,7 +348,7 @@ namespace FarseerPhysics.Common
 		static int FindIndex( List<Fixture> list, Fixture item )
 		{
 			for( int i = 0; i < list.Count; ++i )
-				if( list[i].CompareTo( item ) )
+				if( list[i].compareTo( item ) )
 					return i;
 
 			return -1;
@@ -433,7 +435,7 @@ namespace FarseerPhysics.Common
 				{
 					foreach( Fixture fixture in body.fixtureList )
 					{
-						if( !fixtures.Any( f2 => fixture.CompareTo( f2 ) ) )
+						if( !fixtures.Any( f2 => fixture.compareTo( f2 ) ) )
 						{
 							SerializeFixture( fixture );
 							fixtures.Add( fixture );
@@ -721,12 +723,12 @@ namespace FarseerPhysics.Common
 									body._enabled = bool.Parse( sn.Value );
 									break;
 								case "allowsleep":
-									body.sleepingAllowed = bool.Parse( sn.Value );
+									body.isSleepingAllowed = bool.Parse( sn.Value );
 									break;
 								case "angle":
 									{
 										Vector2 position = body.position;
-										body.SetTransformIgnoreContacts( ref position, float.Parse( sn.Value ) );
+										body.setTransformIgnoreContacts( ref position, float.Parse( sn.Value ) );
 									}
 									break;
 								case "angulardamping":
@@ -736,10 +738,10 @@ namespace FarseerPhysics.Common
 									body.angularVelocity = float.Parse( sn.Value );
 									break;
 								case "awake":
-									body.awake = bool.Parse( sn.Value );
+									body.isAwake = bool.Parse( sn.Value );
 									break;
 								case "bullet":
-									body.IsBullet = bool.Parse( sn.Value );
+									body.isBullet = bool.Parse( sn.Value );
 									break;
 								case "fixedrotation":
 									body.fixedRotation = bool.Parse( sn.Value );
@@ -754,7 +756,7 @@ namespace FarseerPhysics.Common
 									{
 										float rotation = body.rotation;
 										Vector2 position = ReadVector( sn );
-										body.SetTransformIgnoreContacts( ref position, rotation );
+										body.setTransformIgnoreContacts( ref position, rotation );
 									}
 									break;
 								case "userdata":
@@ -765,8 +767,8 @@ namespace FarseerPhysics.Common
 										foreach( XMLFragmentElement pair in sn.Elements )
 										{
 											Fixture fix = fixtures[int.Parse( pair.Attributes[0].Value )];
-											fix.shape = shapes[int.Parse( pair.Attributes[1].Value )].Clone();
-											fix.CloneOnto( body );
+											fix.shape = shapes[int.Parse( pair.Attributes[1].Value )].clone();
+											fix.cloneOnto( body );
 										}
 										break;
 									}
@@ -861,7 +863,7 @@ namespace FarseerPhysics.Common
 						joint.bodyA = bodyA;
 						joint.bodyB = bodyB;
 						joints.Add( joint );
-						world.AddJoint( joint );
+						world.addJoint( joint );
 
 						foreach( XMLFragmentElement sn in n.Elements)
 						{
@@ -1118,7 +1120,7 @@ namespace FarseerPhysics.Common
 				}
 			}
 
-			world.ProcessChanges();
+			world.processChanges();
 		}
 
 		static Vector2 ReadVector( XMLFragmentElement node )

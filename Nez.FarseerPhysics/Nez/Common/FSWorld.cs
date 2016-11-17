@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Nez.Farseer
 {
-	public class FSWorld : Component, IUpdatable
+	public class FSWorld : SceneComponent
 	{
 		public World world;
 
@@ -32,47 +32,51 @@ namespace Nez.Farseer
 		}
 
 
-		public override void onAddedToEntity()
+		public override void onEnabled()
 		{
-			// we want our World to tick first, before any other Entities/Components
-			entity.setUpdateOrder( int.MinValue );
-			setUpdateOrder( int.MinValue );
+			world.enabled = true;
 		}
 
 
-		public override void onRemovedFromEntity()
+		public override void onDisabled()
 		{
-			world.Clear();
+			world.enabled = false;
+		}
+
+
+		public override void onRemovedFromScene()
+		{
+			world.clear();
 			world = null;
 		}
 
 
-		void IUpdatable.update()
+		public override void update()
 		{
 			if( enableMousePicking )
 			{
 				if( Input.leftMouseButtonPressed )
 				{
-					var pos = entity.scene.camera.screenToWorldPoint( Input.mousePosition );
-					var fixture = world.TestPoint( FSConvert.displayToSim * pos );
+					var pos = Core.scene.camera.screenToWorldPoint( Input.mousePosition );
+					var fixture = world.testPoint( FSConvert.displayToSim * pos );
 					if( fixture != null && !fixture.body.isStatic && !fixture.body.isKinematic )
 						_mouseJoint = fixture.body.createFixedMouseJoint( pos );
 				}
 
 				if( Input.leftMouseButtonDown && _mouseJoint != null )
 				{
-					var pos = entity.scene.camera.screenToWorldPoint( Input.mousePosition );
+					var pos = Core.scene.camera.screenToWorldPoint( Input.mousePosition );
 					_mouseJoint.worldAnchorB = FSConvert.toSimUnits( pos );
 				}
 
 				if( Input.leftMouseButtonReleased && _mouseJoint != null )
 				{
-					world.RemoveJoint( _mouseJoint );
+					world.removeJoint( _mouseJoint );
 					_mouseJoint = null;
 				}
 			}
 
-			world.Step( MathHelper.Min( Time.deltaTime, minimumUpdateDeltaTime ) );
+			world.step( MathHelper.Min( Time.deltaTime, minimumUpdateDeltaTime ) );
 		}
 
 
