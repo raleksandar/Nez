@@ -639,39 +639,37 @@ namespace FarseerPhysics.Dynamics
 
 		public bool ignoreCCD;
 
+		/// <summary>
+		/// wires up the onCollision event for every fixture on the Body
+		/// </summary>
 		public event OnCollisionEventHandler onCollision
 		{
 			add
 			{
 				for( int i = 0; i < fixtureList.Count; i++ )
-				{
 					fixtureList[i].onCollision += value;
-				}
 			}
 			remove
 			{
 				for( int i = 0; i < fixtureList.Count; i++ )
-				{
 					fixtureList[i].onCollision -= value;
-				}
 			}
 		}
 
+		/// <summary>
+		/// wires up the onSeparation event for every fixture on the Body
+		/// </summary>
 		public event OnSeparationEventHandler onSeparation
 		{
 			add
 			{
 				for( int i = 0; i < fixtureList.Count; i++ )
-				{
 					fixtureList[i].onSeparation += value;
-				}
 			}
 			remove
 			{
 				for( int i = 0; i < fixtureList.Count; i++ )
-				{
 					fixtureList[i].onSeparation -= value;
-				}
 			}
 		}
 
@@ -944,12 +942,12 @@ namespace FarseerPhysics.Dynamics
 			}
 
 			// Move center of mass.
-			Vector2 oldCenter = _sweep.C;
+			var oldCenter = _sweep.C;
 			_sweep.LocalCenter = localCenter;
 			_sweep.C0 = _sweep.C = MathUtils.Mul( ref _xf, ref _sweep.LocalCenter );
 
 			// Update center of mass velocity.
-			Vector2 a = _sweep.C - oldCenter;
+			var a = _sweep.C - oldCenter;
 			_linearVelocity += new Vector2( -_angularVelocity * a.Y, _angularVelocity * a.X );
 		}
 
@@ -1245,7 +1243,7 @@ namespace FarseerPhysics.Dynamics
 
 		internal void synchronizeFixtures()
 		{
-			Transform xf1 = new Transform();
+			var xf1 = new Transform();
 			xf1.q.Set( _sweep.A0 );
 			xf1.p = _sweep.C0 - MathUtils.mul( xf1.q, _sweep.LocalCenter );
 
@@ -1345,7 +1343,7 @@ namespace FarseerPhysics.Dynamics
 		/// <returns></returns>
 		public Body clone( World world = null )
 		{
-			Body body = new Body( world ?? _world, position, rotation );
+			var body = new Body( world ?? _world, position, rotation );
 			body._bodyType = _bodyType;
 			body._linearVelocity = _linearVelocity;
 			body._angularVelocity = _angularVelocity;

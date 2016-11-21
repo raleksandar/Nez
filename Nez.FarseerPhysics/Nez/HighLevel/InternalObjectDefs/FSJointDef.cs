@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework;
 
 namespace Nez.Farseer
 {
-	public abstract class FSJointDef
+	internal abstract class FSJointDef
 	{
 		public Body bodyA;
 		public Body bodyB;
@@ -15,7 +15,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSDistanceJointDef : FSJointDef
+	internal class FSDistanceJointDef : FSJointDef
 	{
 		public Vector2 ownerBodyAnchor;
 		public Vector2 otherBodyAnchor;
@@ -33,7 +33,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSFrictionJointDef : FSJointDef
+	internal class FSFrictionJointDef : FSJointDef
 	{
 		public Vector2 anchor;
 		public float maxForce;
@@ -50,7 +50,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSWeldJointDef : FSJointDef
+	internal class FSWeldJointDef : FSJointDef
 	{
 		public Vector2 ownerBodyAnchor;
 		public Vector2 otherBodyAnchor;
@@ -68,7 +68,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSAngleJointDef : FSJointDef
+	internal class FSAngleJointDef : FSJointDef
 	{
 		public float maxImpulse = float.MaxValue;
 		public float biasFactor = 0.2f;
@@ -86,7 +86,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSRevoluteJointDef : FSJointDef
+	internal class FSRevoluteJointDef : FSJointDef
 	{
 		public Vector2 ownerBodyAnchor;
 		public Vector2 otherBodyAnchor;
@@ -114,7 +114,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSPrismaticJointDef : FSJointDef
+	internal class FSPrismaticJointDef : FSJointDef
 	{
 		public Vector2 ownerBodyAnchor;
 		public Vector2 otherBodyAnchor;
@@ -123,8 +123,8 @@ namespace Nez.Farseer
 		public float lowerLimit;
 		public float upperLimit;
 		public bool motorEnabled;
-		public float motorSpeed;
-		public float maxMotorForce = 1;
+		public float motorSpeed = 0.7f;
+		public float maxMotorForce = 2;
 		public float motorImpulse;
 
 		public override Joint createJoint()
@@ -144,7 +144,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSRopeJointDef : FSJointDef
+	internal class FSRopeJointDef : FSJointDef
 	{
 		public Vector2 ownerBodyAnchor;
 		public Vector2 otherBodyAnchor;
@@ -160,7 +160,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSMotorJointDef : FSJointDef
+	internal class FSMotorJointDef : FSJointDef
 	{
 		public Vector2 linearOffset;
 		public float maxForce = 1;
@@ -180,15 +180,15 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSWheelJointDef : FSJointDef
+	internal class FSWheelJointDef : FSJointDef
 	{
 		public Vector2 anchor;
 		public Vector2 axis = Vector2.UnitY;
 		public bool motorEnabled;
 		public float motorSpeed;
 		public float maxMotorTorque;
-		public float frequency;
-		public float dampingRatio;
+		public float frequency = 2;
+		public float dampingRatio = 0.7f;
 
 		public override Joint createJoint()
 		{
@@ -205,7 +205,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSPulleyJointDef : FSJointDef
+	internal class FSPulleyJointDef : FSJointDef
 	{
 		public Vector2 ownerBodyAnchor;
 		public Vector2 otherBodyAnchor;
@@ -223,7 +223,7 @@ namespace Nez.Farseer
 	}
 
 
-	public class FSGearJointDef : FSJointDef
+	internal class FSGearJointDef : FSJointDef
 	{
 		public Joint ownerJoint;
 		public Joint otherJoint;
@@ -233,6 +233,29 @@ namespace Nez.Farseer
 		{
 			var joint = new GearJoint( bodyA, bodyB, ownerJoint, otherJoint, ratio );
 			joint.collideConnected = collideConnected;
+			return joint;
+		}
+	}
+
+
+	internal class FSMouseJointDef : FSJointDef
+	{
+		public Vector2 worldAnchor;
+		public float maxForce;
+		public float frequency = 5;
+		public float dampingRatio = 0.7f;
+
+		public override Joint createJoint()
+		{
+			var joint = new FixedMouseJoint( bodyA, worldAnchor * FSConvert.displayToSim );
+			joint.collideConnected = collideConnected;
+
+			// conditionally set the maxForce
+			if( maxForce > 0 )
+				joint.maxForce = maxForce;
+			
+			joint.frequency = frequency;
+			joint.dampingRatio = dampingRatio;
 			return joint;
 		}
 	}

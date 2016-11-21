@@ -18,8 +18,122 @@ The Nez Farseer implementation has a few important goals that it aims to achieve
 The Farseer code is all in progress and the API is definitely not in its final state. Usually this would be kept out of the main repo until the API is solidified but since Farseer is entirely optional all in-progress changes will be public. If you are itching to get going with Farseer for now you are mostly on your own. The high level API (and all Nez-specific additions) are available in the Nez.FarseerPhysics/Nez folder.
 
 
+## Using Farseer with Nez
+First and foremost, you should always set your pixel-to-meter ratio before doing anything. By default, the value is set to 100. You can change this to whatever you want by calling `FSConvert.setDisplayUnitToSimUnitRatio`. Behind the scenes, the high level API will be using this value to deal with converting to/from simulation units to pixels. If you choose to use the Farseer API directly be sure to remember to convert your units with the FSDebug `displayToSim` and `simToDisplay` fields.
 
-## Understanding Farseer Objects
+There are a couple options for using Farseer physics with Nez to provide some flexibility. Regardless of if you choose to use the Component-based high level API or use Farseer directly it is recommended to use the `FSWorld` `SceneComponent` to manage the Farseer `World` object. All of the the high level API will get the World object from the FSWorld SceneComponent. You can easily access it by just calling `Scene.getOrCreateSceneComponent<FSWorld>()`. As the name implies, this will fetch the FSWorld SceneComponent or first create it then fetch it.
+
+The `FSDebugView` Component can be added to your Scene to get a visual representation of the physics world. This is very handy for development and debugging of Farseer objects and it will work with the high or low level API.
+
+
+## High Level API
+The high level API wraps up the Farseer API in standard Nez Components. Farseer Components come in 3 different flavors explained below each of them with a fluent API for configuring the objects for easy method chaining and API exploration.
+
+- **FSRigidBody**: wraps the Farseer Body. Handles keeping the Entity.transform in sync with the Farseer Body. FSRigidBody's can be any of the three body types: Dynamic, Static or Kinematic (see Understanding Farseer Objects for details on each). An FSRigidBody is required for any of the other Farseer Components to be of any use.
+
+- **FSCollisionShape**: wraps the Farseer Fixture and Shape objects. This is the physical shape of the collider. You can have 1 or more FSCollisionShapes on your Entity. Available FSCollisionShapes are circle, box, polygon, edge and chain.
+
+- **FSJoint**: wraps the Farseer Joint. Joints can be used to connect two FSRigidBodys in various different ways. Included joint types are: angle, distance, friction, gear, motor, mouse, prismatic, pulley, revolute (hinge), rope, weld and wheel.
+
+Lets take a look at some basic examples of using the API.
+
+Creates a Sprite and a dynamic Farseer rigid body with a circle collider
+```cs
+// create an Entity and set the position and scale
+createEntity( "circle-sprite" )
+	.setPosition( pos )
+  	.setScale( scale )
+	
+	// add an FSRigidBody and set the bodyType to dynamic
+	.addComponent<FSRigidBody>()
+	.setBodyType( BodyType.Dynamic )
+	
+	// add a circle shape for our collisions and set the radius to halve the texture width
+	.addComponent<FSCollisionCircle>()
+	.setRadius( texture.Width / 2 )
+	
+	// finally add a Sprite
+	.addComponent( new Sprite( texture ) );
+```
+
+Creates a static Farseer rigid body and an edge collider that goes from vert1 to vert2
+```cs
+createEntity( "edge" )
+	.setPosition( pos )
+	
+	// add the FSRigidBody. By default it will be static
+	.addComponent<FSRigidBody>()
+	
+	// add our edge collision shape with two verts
+	.addComponent<FSCollisionEdge>()
+  	.setVertices( vert1, vert2 );
+```
+
+Creates a static Farseer rigid body with a chain collider. Chains are essentially a free form sequence of line segments that can be collided with from either side.
+```cs
+// define the verts. The Vertices class has the sme API as List<Vector2>.
+var verts = new Vertices();
+verts.Add( new Vector2( 500, 10 ) );
+verts.Add( new Vector2( 550, 50 ) );
+verts.Add( new Vector2( 600, 70) );
+verts.Add( new Vector2( 700, 20 ) );
+
+createEntity( "chain" )
+	// add our static FSRigidBody
+	.addComponent<FSRigidBody>()
+		
+	// add the chain shape and set the verts
+	.addComponent<FSCollisionChain>()
+  	.setVertices( verts );
+```
+
+This example shows how to use a joint to connect two FSRigidBodies. It is assumed that rigidBody1 and rigidBody2 exist and are FSRigidBodies.
+```cs
+// add the weld joint to the first rigid body. Weld joints essentially glues two bodies together.
+rigidBody1.addComponent<FSWeldJoint>()
+		 // configure the anchors for the two bodies. Anchors are relative to the position of each body.
+	     .setOtherBodyAnchor( new Vector2( 50, 0 ) )
+	     .setOwnerBodyAnchor( new Vector2( -50, 50 ) )
+		 
+		 // configure the frequency and damping ratio
+	     .setFrequencyHz( 5 )
+	     .setDampingRatio( 0.1f )
+		 
+		 // set the second FSRigidBody for the joint
+	     .setOtherBody( rigidBody2 );
+```
+
+Finally lets take a look at creating a slightly more complex collision shape.
+```cs
+var vertList = new List<Vertices>();
+// fill vertList with some polygon vertices
+
+// create and configure our standard rigid body
+var rb = createEntity( "compound-polygon" )
+	.setPosition( pos )
+	.addComponent<FSRigidBody>()
+	.setBodyType( BodyType.Dynamic );
+
+// add an FSCollisionPolygon for each of the vert Lists
+foreach( var verts in vertList )
+{
+	rb.addComponent<FSCollisionPolygon>()
+	  .setVertices( verts );
+}
+```
+
+
+## Low Level API
+The low level API provides a small number of Components that handle synching the Nez Transform with the Farseer Body. These can be used to get up and running quickly but they are more here to be used as a template so that you can create your own custom subclasses.
+
+- **FSGenericBody**: manages the Farseer Body (and provides public access to it) and syncs it with the Nez Transform. That's about all you get with it. To make adding collision shapes and joints easier there are a pile of extension methods on the Body class. They all take care of converting from pixel space to simulation space as well.
+
+- **FSRenderableBody**: manages the Farseer Body and syncs it with the Nez Transform. Where it differs from the `FSGenericBody` is that there are some subclasses that are instantly useable: `FSBoxBody`, `FSCircleBody`, `FSPolygonBody` and `FSCompoundPolygonBody`. These Components all take in a Texture2D/Subtexture and create the Farseer Body, Fixture and Shape for you. They also handle rendering as well. `FSCompoundPolygonBody` will generate the collision shape based on the texture which can be really handy.
+
+
+
+
+### Understanding Farseer Objects
 Farseer consists of a few key objects that are paramount to understanding the API and being able to effectively use it.
 
 - **World**: the world object is the manager of it all. It iterates all the objects in the world each frame steps through and makes sure everything is consistent and stable.
@@ -34,16 +148,5 @@ Farseer consists of a few key objects that are paramount to understanding the AP
 - **Fixture**: a fixture attaches (fixes) the shape to the body so that the centroid of the shape becomes the body’s position. Whenever you move the body, you also move the shape. Once a collision occurs to the shape, the force is calculated and applied to the body.
 
 
-
-## Using Farseer with Nez
-There are a couple options for using Farseer physics with Nez to provide some flexibility. The recommended approach is to use or subclass `FarseerScene`. FarseerScene has a `world` field that houses the Farseer World object and takes care of the physics step each frame.
-
-Alternatively, you can add an `FSWorld` Component to your Scene to get the same effect. Note that you must add your FSWorld Component before attempting to use any of the built in Components since they rely on the World existing.
-
-The `FSDebugView` Component can be added to your Scene to get a visual representation of the physics world. This is very handy for development and debugging of Farseer objects.
-
-
-
-## More coming soon after solidifying the API
 
 

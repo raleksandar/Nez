@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 
 namespace Nez.Farseer
 {
-	class FSBodyDef
+	internal class FSBodyDef
 	{
 		public BodyType bodyType = BodyType.Static;
 		public Vector2 linearVelocity;
@@ -17,6 +17,7 @@ namespace Nez.Farseer
 		public bool isAwake = true;
 		public bool fixedRotation;
 		public bool ignoreGravity;
+		public float gravityScale = 1;
 		public float mass;
 		public float inertia;
 	}
